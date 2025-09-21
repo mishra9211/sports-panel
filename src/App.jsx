@@ -19,18 +19,30 @@ export default function App() {
 
   // Fetch sports
   useEffect(() => {
-    async function fetchSports() {
-      try {
-        const res = await axios.get(`${BASE_URL}/sports`);
-        setSports(res.data);
-      } catch (err) {
-        console.error("Error fetching sports:", err);
-      } finally {
-        setLoading(false);
-      }
+  async function fetchSports() {
+    try {
+      const res = await axios.get(`${BASE_URL}/sports`);
+
+      // Priority order: cricket, tennis, soccer
+      const priorityOrder = ["cricket", "tennis", "soccer"];
+      let sortedSports = res.data.sort((a, b) => {
+        const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
+        const bIndex = priorityOrder.indexOf(b.name.toLowerCase());
+        if (aIndex === -1 && bIndex === -1) return 0; // कोई priority नहीं
+        if (aIndex === -1) return 1; // a last
+        if (bIndex === -1) return -1; // b last
+        return aIndex - bIndex; // priority के हिसाब से
+      });
+
+      setSports(sortedSports);
+    } catch (err) {
+      console.error("Error fetching sports:", err);
+    } finally {
+      setLoading(false);
     }
-    fetchSports();
-  }, []);
+  }
+  fetchSports();
+}, []);
 
   // Fetch leagues for selected sport
   const handleSportClick = async (sport) => {
