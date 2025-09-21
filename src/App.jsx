@@ -121,23 +121,26 @@ export default function App() {
         ))}
       </div>
 
-      {/* Leagues */}
-      {leagues.length > 0 && (
-        <div className="leagues-container">
-          <h2>Leagues</h2>
-          {leagues.map((league, idx) => (
-            <div
-              key={idx}
-              className={`league-box ${
-                selectedLeague?.name === league.name ? "selected" : ""
-              }`}
-              onClick={() => handleLeagueClick(league)}
-            >
-              {league.name} ({league.matches.length} matches)
-            </div>
-          ))}
+    {/* Leagues */}
+{leagues.length > 0 && (
+  <div className="leagues-container">
+    <h2>Leagues</h2>
+    <div className="leagues-scroll">
+      {leagues.map((league, idx) => (
+        <div
+          key={idx}
+          className={`league-box ${
+            selectedLeague?.name === league.name ? "selected" : ""
+          }`}
+          onClick={() => handleLeagueClick(league)}
+        >
+          <p className="league-name">{league.name}</p>
+          <p className="league-count">{league.matches.length} matches</p>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
 
       {/* Matches */}
       {matches.length > 0 && (
