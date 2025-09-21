@@ -1,0 +1,145 @@
+/* General Container */
+.app-container {
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f3f4f6;
+}
+
+.app-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2563eb;
+  margin-bottom: 20px;
+}
+
+/* Loading */
+.loading-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+}
+
+.loading-text {
+  font-size: 1.25rem;
+  color: #6b7280;
+}
+
+/* Sports Scroll */
+.sports-scroll-container {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.sports-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.sports-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.sports-scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.sports-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.sport-box {
+  flex-shrink: 0;
+  min-width: 80px;
+  padding: 10px 12px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.sport-box:hover {
+  transform: scale(1.05);
+  background-color: #e0f2fe;
+}
+
+.sport-box.selected {
+  background-color: #bae6fd;
+  transform: scale(1.05);
+}
+
+/* Events Table */
+.events-container {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  min-width: 600px; /* ensures scroll on small screens */
+}
+
+.events-table th,
+.events-table td {
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.events-table thead {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.events-table tbody tr:nth-child(even) {
+  background-color: #f3f4f6;
+}
+
+.events-table tbody tr:hover {
+  background-color: #e0f2fe;
+  cursor: pointer;
+}
+
+.events-table td {
+  font-size: 14px;
+  color: #111827;
+}
+
+
+.event-row:hover {
+  background-color: #e0f2fe;
+  cursor: pointer;
+}
+
+/* Market Row */
+.market-row td {
+  background-color: #f9fafb;
+  padding: 10px 12px;
+}
+
+/* Market Card */
+.market-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 6px;
+  background-color: #fff;
+}
+
+.market-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
