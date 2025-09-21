@@ -7,7 +7,17 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS setup: frontend URL allow करो
+const FRONTEND_URL = "https://sports-panel-1.onrender.com"; // Render frontend URL
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // MongoDB connect
@@ -42,10 +52,11 @@ app.get("/sync-sports", async (req, res) => {
       {
         headers: {
           "Accept": "application/json, text/plain, */*",
-          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
           "Referer": "https://www.shoutpe247.com/",
-          "Origin": "https://www.shoutpe247.com"
-        }
+          "Origin": "https://www.shoutpe247.com",
+        },
       }
     );
 
@@ -62,16 +73,6 @@ app.get("/sync-sports", async (req, res) => {
 });
 
 // Get all sports
-app.get("/sports", async (req, res) => {
-  try {
-    const sports = await Sport.find().sort({ rank: 1, name: 1 });
-    res.json(sports);
-  } catch (err) {
-    console.error("❌ Error fetching sports:", err.message);
-    res.status(500).json({ message: "Error fetching sports" });
-  }
-});
-
 app.get("/sports", async (req, res) => {
   try {
     const sports = await Sport.find().sort({ rank: 1, name: 1 });

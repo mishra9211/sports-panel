@@ -13,12 +13,13 @@ export default function App() {
   const [marketLoading, setMarketLoading] = useState(false);
 
   const priorityOrder = ["cricket", "tennis", "soccer"];
+  const BASE_URL = "https://sports-panel.onrender.com"; // ✅ Live backend
 
   // Fetch sports
   useEffect(() => {
     async function fetchSports() {
       try {
-        const res = await axios.get("http://localhost:8000/sports");
+        const res = await axios.get(`${BASE_URL}/sports`);
         let sortedSports = res.data;
         sortedSports.sort((a, b) => {
           const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
@@ -62,36 +63,35 @@ export default function App() {
     }
   };
 
-  // Fetch market data on event click
-const handleEventClick = async (event) => {
-  const eventId = event.eventId || event.event_id;
+  // Fetch market data
+  const handleEventClick = async (event) => {
+    const eventId = event.eventId || event.event_id;
 
-  if (expandedEventId === eventId) {
-    setExpandedEventId(null); // collapse
-    return;
-  }
-
-  setExpandedEventId(eventId);
-  setMarketData((prev) => ({ ...prev, [eventId]: null }));
-  setMarketLoading(true);
-
-  try {
-    const res = await axios.get(
-      `https://zplay1.in/pb/api/v1/events/matchDetails/${eventId}`
-    );
-    if (res.data.success) {
-      // ✅ Update: matchOddData is inside data.match
-      setMarketData((prev) => ({
-        ...prev,
-        [eventId]: res.data.data.match?.matchOddData || [],
-      }));
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null); // collapse
+      return;
     }
-  } catch (err) {
-    console.error("Error fetching market data:", err);
-  } finally {
-    setMarketLoading(false);
-  }
-};
+
+    setExpandedEventId(eventId);
+    setMarketData((prev) => ({ ...prev, [eventId]: null }));
+    setMarketLoading(true);
+
+    try {
+      const res = await axios.get(
+        `https://zplay1.in/pb/api/v1/events/matchDetails/${eventId}`
+      );
+      if (res.data.success) {
+        setMarketData((prev) => ({
+          ...prev,
+          [eventId]: res.data.data.match?.matchOddData || [],
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching market data:", err);
+    } finally {
+      setMarketLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -161,21 +161,21 @@ const handleEventClick = async (event) => {
                     )}
 
                     {expandedEventId === eventId &&
-  !marketLoading &&
-  marketData[eventId]?.length > 0 &&
-  marketData[eventId].map((market) => (
-    <tr key={market.id} className="market-row">
-      <td colSpan="3">
-        <div className="market-card">
-          <p className="market-name">{market.marketName}</p>
-          <p>
-            Inplay Stake Limit: {market.inplay_stake_limit} | Max Market Limit:{" "}
-            {market.max_market_limit} | Min Stake Limit: {market.min_stake_limit} | Odd Limit: {market.odd_limit}
-          </p>
-        </div>
-      </td>
-    </tr>
-))}
+                      !marketLoading &&
+                      marketData[eventId]?.length > 0 &&
+                      marketData[eventId].map((market) => (
+                        <tr key={market.id} className="market-row">
+                          <td colSpan="3">
+                            <div className="market-card">
+                              <p className="market-name">{market.marketName}</p>
+                              <p>
+                                Inplay Stake Limit: {market.inplay_stake_limit} | Max Market Limit:{" "}
+                                {market.max_market_limit} | Min Stake Limit: {market.min_stake_limit} | Odd Limit: {market.odd_limit}
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
 
                     {expandedEventId === eventId &&
                       !marketLoading &&
