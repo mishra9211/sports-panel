@@ -6,30 +6,23 @@ export default function App() {
   const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState(null);
-  const [events, setEvents] = useState([]);
-  const [eventsLoading, setEventsLoading] = useState(false);
-  const [expandedEventId, setExpandedEventId] = useState(null);
+
+  const [leagues, setLeagues] = useState([]);
+  const [selectedLeague, setSelectedLeague] = useState(null);
+
+  const [matches, setMatches] = useState([]);
+  const [expandedMatchId, setExpandedMatchId] = useState(null);
   const [marketData, setMarketData] = useState({});
   const [marketLoading, setMarketLoading] = useState(false);
 
-  const priorityOrder = ["cricket", "tennis", "soccer"];
-  const BASE_URL = "https://sports-panel.onrender.com"; // ✅ Live backend
+  const BASE_URL = "https://sports-panel.onrender.com"; // Live backend
 
   // Fetch sports
   useEffect(() => {
     async function fetchSports() {
       try {
         const res = await axios.get(`${BASE_URL}/sports`);
-        let sortedSports = res.data;
-        sortedSports.sort((a, b) => {
-          const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
-          const bIndex = priorityOrder.indexOf(b.name.toLowerCase());
-          if (aIndex === -1 && bIndex === -1) return 0;
-          if (aIndex === -1) return 1;
-          if (bIndex === -1) return -1;
-          return aIndex - bIndex;
-        });
-        setSports(sortedSports);
+        setSports(res.data);
       } catch (err) {
         console.error("Error fetching sports:", err);
       } finally {
@@ -39,51 +32,65 @@ export default function App() {
     fetchSports();
   }, []);
 
-  // Fetch events
+  // Fetch leagues for selected sport
   const handleSportClick = async (sport) => {
     setSelectedSport(sport.id);
-    setEvents([]);
-    setExpandedEventId(null);
-    setEventsLoading(true);
+    setLeagues([]);
+    setSelectedLeague(null);
+    setMatches([]);
+    setExpandedMatchId(null);
 
     try {
       const res = await axios.get(
         `https://central.zplay1.in/pb/api/v1/events/matches/${sport.id}`
       );
       if (res.data.success) {
-        const filtered = res.data.data.filter(
-          (ev) => ev.league_name !== "Exclusive League"
-        );
-        setEvents(filtered);
+        // Group by league
+        const leagueMap = {};
+        res.data.data.forEach((match) => {
+          if (match.league_name !== "Exclusive League") {
+            if (!leagueMap[match.league_name]) leagueMap[match.league_name] = [];
+            leagueMap[match.league_name].push(match);
+          }
+        });
+        const leagueArray = Object.keys(leagueMap).map((leagueName) => ({
+          name: leagueName,
+          matches: leagueMap[leagueName],
+        }));
+        setLeagues(leagueArray);
       }
     } catch (err) {
-      console.error("Error fetching events:", err);
-    } finally {
-      setEventsLoading(false);
+      console.error("Error fetching leagues:", err);
     }
   };
 
-  // Fetch market data
-  const handleEventClick = async (event) => {
-    const eventId = event.eventId || event.event_id;
+  // Show matches for selected league
+  const handleLeagueClick = (league) => {
+    setSelectedLeague(league);
+    setMatches(league.matches);
+    setExpandedMatchId(null);
+  };
 
-    if (expandedEventId === eventId) {
-      setExpandedEventId(null); // collapse
+  // Fetch market data for a match
+  const handleMatchClick = async (match) => {
+    const matchId = match.eventId || match.event_id;
+    if (expandedMatchId === matchId) {
+      setExpandedMatchId(null); // collapse
       return;
     }
 
-    setExpandedEventId(eventId);
-    setMarketData((prev) => ({ ...prev, [eventId]: null }));
+    setExpandedMatchId(matchId);
+    setMarketData((prev) => ({ ...prev, [matchId]: null }));
     setMarketLoading(true);
 
     try {
       const res = await axios.get(
-        `https://zplay1.in/pb/api/v1/events/matchDetails/${eventId}`
+        `https://zplay1.in/pb/api/v1/events/matchDetails/${matchId}`
       );
       if (res.data.success) {
         setMarketData((prev) => ({
           ...prev,
-          [eventId]: res.data.data.match?.matchOddData || [],
+          [matchId]: res.data.data.match?.matchOddData || [],
         }));
       }
     } catch (err) {
@@ -93,19 +100,13 @@ export default function App() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <p className="loading-text">Loading sports...</p>
-      </div>
-    );
-  }
+  if (loading) return <p>Loading sports...</p>;
 
   return (
     <div className="app-container">
       <h1 className="app-title">Sports Panel 🚀</h1>
 
-      {/* Sports horizontal scroll */}
+      {/* Sports */}
       <div className="sports-scroll-container">
         {sports.map((sport) => (
           <div
@@ -120,54 +121,65 @@ export default function App() {
         ))}
       </div>
 
-      {/* Events Table */}
-      <div className="events-container">
-        {eventsLoading && <p className="loading-text">Loading events...</p>}
-        {!eventsLoading && events.length === 0 && selectedSport && (
-          <p className="loading-text">No events found for this sport.</p>
-        )}
+      {/* Leagues */}
+      {leagues.length > 0 && (
+        <div className="leagues-container">
+          <h2>Leagues</h2>
+          {leagues.map((league, idx) => (
+            <div
+              key={idx}
+              className={`league-box ${
+                selectedLeague?.name === league.name ? "selected" : ""
+              }`}
+              onClick={() => handleLeagueClick(league)}
+            >
+              {league.name} ({league.matches.length} matches)
+            </div>
+          ))}
+        </div>
+      )}
 
-        {!eventsLoading && events.length > 0 && (
+      {/* Matches */}
+      {matches.length > 0 && (
+        <div className="matches-container">
+          <h3>Matches</h3>
           <table className="events-table">
             <thead>
               <tr>
-                <th>League</th>
                 <th>Event</th>
                 <th>Date / Time</th>
               </tr>
             </thead>
             <tbody>
-              {events.map((ev) => {
-                const eventId = ev.eventId || ev.event_id;
+              {matches.map((match) => {
+                const matchId = match.eventId || match.event_id;
                 return (
-                  <React.Fragment key={eventId}>
-                    {/* Event row */}
+                  <React.Fragment key={matchId}>
                     <tr
-                      onClick={() => handleEventClick(ev)}
                       className="event-row"
+                      onClick={() => handleMatchClick(match)}
                     >
-                      <td>{ev.leaguesName || ev.league_name}</td>
-                      <td>{ev.eventName || ev.event_name}</td>
+                      <td>{match.eventName || match.event_name}</td>
                       <td>
-                        {new Date(ev.eventDate || ev.event_date).toLocaleString()}
+                        {new Date(match.eventDate || match.event_date).toLocaleString()}
                       </td>
                     </tr>
 
                     {/* Market row */}
-                    {expandedEventId === eventId && marketLoading && (
-                      <tr className="market-row">
-                        <td colSpan="3">Loading market data...</td>
+                    {expandedMatchId === matchId && marketLoading && (
+                      <tr>
+                        <td colSpan="2">Loading market data...</td>
                       </tr>
                     )}
 
-                    {expandedEventId === eventId &&
+                    {expandedMatchId === matchId &&
                       !marketLoading &&
-                      marketData[eventId]?.length > 0 &&
-                      marketData[eventId].map((market) => (
-                        <tr key={market.id} className="market-row">
-                          <td colSpan="3">
+                      marketData[matchId]?.length > 0 &&
+                      marketData[matchId].map((market) => (
+                        <tr key={market.id}>
+                          <td colSpan="2">
                             <div className="market-card">
-                              <p className="market-name">{market.marketName}</p>
+                              <p>{market.marketName}</p>
                               <p>
                                 Inplay Stake Limit: {market.inplay_stake_limit} | Max Market Limit:{" "}
                                 {market.max_market_limit} | Min Stake Limit: {market.min_stake_limit} | Odd Limit: {market.odd_limit}
@@ -177,11 +189,11 @@ export default function App() {
                         </tr>
                       ))}
 
-                    {expandedEventId === eventId &&
+                    {expandedMatchId === matchId &&
                       !marketLoading &&
-                      (!marketData[eventId] || marketData[eventId].length === 0) && (
-                        <tr className="market-row">
-                          <td colSpan="3">No market data available</td>
+                      (!marketData[matchId] || marketData[matchId].length === 0) && (
+                        <tr>
+                          <td colSpan="2">No market data available</td>
                         </tr>
                       )}
                   </React.Fragment>
@@ -189,8 +201,8 @@ export default function App() {
               })}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
