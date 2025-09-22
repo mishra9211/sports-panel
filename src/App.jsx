@@ -6,6 +6,7 @@ export default function App() {
   const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState(null);
+  const [selectedSportName, setSelectedSportName] = useState(""); // ✅ Tennis Max Profit logic
 
   const [leagues, setLeagues] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState(null);
@@ -19,34 +20,35 @@ export default function App() {
 
   // Fetch sports
   useEffect(() => {
-  async function fetchSports() {
-    try {
-      const res = await axios.get(`${BASE_URL}/sports`);
+    async function fetchSports() {
+      try {
+        const res = await axios.get(`${BASE_URL}/sports`);
 
-      // Priority order: cricket, tennis, soccer
-      const priorityOrder = ["cricket", "tennis", "soccer"];
-      let sortedSports = res.data.sort((a, b) => {
-        const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
-        const bIndex = priorityOrder.indexOf(b.name.toLowerCase());
-        if (aIndex === -1 && bIndex === -1) return 0; // कोई priority नहीं
-        if (aIndex === -1) return 1; // a last
-        if (bIndex === -1) return -1; // b last
-        return aIndex - bIndex; // priority के हिसाब से
-      });
+        // Priority order: cricket, tennis, soccer
+        const priorityOrder = ["cricket", "tennis", "soccer"];
+        let sortedSports = res.data.sort((a, b) => {
+          const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
+          const bIndex = priorityOrder.indexOf(b.name.toLowerCase());
+          if (aIndex === -1 && bIndex === -1) return 0;
+          if (aIndex === -1) return 1;
+          if (bIndex === -1) return -1;
+          return aIndex - bIndex;
+        });
 
-      setSports(sortedSports);
-    } catch (err) {
-      console.error("Error fetching sports:", err);
-    } finally {
-      setLoading(false);
+        setSports(sortedSports);
+      } catch (err) {
+        console.error("Error fetching sports:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
-  fetchSports();
-}, []);
+    fetchSports();
+  }, []);
 
   // Fetch leagues for selected sport
   const handleSportClick = async (sport) => {
     setSelectedSport(sport.id);
+    setSelectedSportName(sport.name); // ✅ store sport name for Tennis logic
     setLeagues([]);
     setSelectedLeague(null);
     setMatches([]);
@@ -57,7 +59,6 @@ export default function App() {
         `https://central.zplay1.in/pb/api/v1/events/matches/${sport.id}`
       );
       if (res.data.success) {
-        // Group by league
         const leagueMap = {};
         res.data.data.forEach((match) => {
           if (match.league_name !== "Exclusive League") {
@@ -87,7 +88,7 @@ export default function App() {
   const handleMatchClick = async (match) => {
     const matchId = match.eventId || match.event_id;
     if (expandedMatchId === matchId) {
-      setExpandedMatchId(null); // collapse
+      setExpandedMatchId(null);
       return;
     }
 
@@ -133,26 +134,26 @@ export default function App() {
         ))}
       </div>
 
-    {/* Leagues */}
-{leagues.length > 0 && (
-  <div className="leagues-container">
-    <h2>Leagues</h2>
-    <div className="leagues-scroll">
-      {leagues.map((league, idx) => (
-        <div
-          key={idx}
-          className={`league-box ${
-            selectedLeague?.name === league.name ? "selected" : ""
-          }`}
-          onClick={() => handleLeagueClick(league)}
-        >
-          <p className="league-name">{league.name}</p>
-          <p className="league-count">{league.matches.length} matches</p>
+      {/* Leagues */}
+      {leagues.length > 0 && (
+        <div className="leagues-container">
+          <h2>Leagues</h2>
+          <div className="leagues-scroll">
+            {leagues.map((league, idx) => (
+              <div
+                key={idx}
+                className={`league-box ${
+                  selectedLeague?.name === league.name ? "selected" : ""
+                }`}
+                onClick={() => handleLeagueClick(league)}
+              >
+                <p className="league-name">{league.name}</p>
+                <p className="league-count">{league.matches.length} matches</p>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
 
       {/* Matches */}
       {matches.length > 0 && (
@@ -168,6 +169,7 @@ export default function App() {
             <tbody>
               {matches.map((match) => {
                 const matchId = match.eventId || match.event_id;
+
                 return (
                   <React.Fragment key={matchId}>
                     <tr
@@ -176,7 +178,9 @@ export default function App() {
                     >
                       <td>{match.eventName || match.event_name}</td>
                       <td>
-                        {new Date(match.eventDate || match.event_date).toLocaleString()}
+                        {new Date(
+                          match.eventDate || match.event_date
+                        ).toLocaleString()}
                       </td>
                     </tr>
 
@@ -190,19 +194,35 @@ export default function App() {
                     {expandedMatchId === matchId &&
                       !marketLoading &&
                       marketData[matchId]?.length > 0 &&
-                      marketData[matchId].map((market) => (
-                        <tr key={market.id}>
-                          <td colSpan="2">
-                            <div className="market-card">
-                              <p>{market.marketName}</p>
-                              <p>
-                                Inplay Stake Limit: {market.inplay_stake_limit} | Max Market Limit:{" "}
-                                {market.max_market_limit} | Min Stake Limit: {market.min_stake_limit} | Odd Limit: {market.odd_limit}
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                      marketData[matchId].map((market) => {
+                        // ✅ Max Profit Limit logic for Tennis
+                        let maxProfitLimit = null;
+                        if (selectedSportName.toLowerCase() === "tennis") {
+                          const stake = Number(market.inplay_stake_limit);
+                          if (stake === 5000) maxProfitLimit = 100000;
+                          else if (stake === 10000) maxProfitLimit = 200000;
+                          else if (stake === 25000) maxProfitLimit = 300000;
+                          else if (stake === 50000) maxProfitLimit = 400000;
+                          else if (stake === 100000) maxProfitLimit = 500000;
+                          else if (stake === 200000) maxProfitLimit = 700000;
+                        }
+
+                        return (
+                          <tr key={market.id}>
+                            <td colSpan="2">
+                              <div className="market-card">
+                                <p>{market.marketName}</p>
+                                <p>
+                                  Inplay Stake Limit: {market.inplay_stake_limit} | Max Market Limit:{" "}
+                                  {market.max_market_limit} | Min Stake Limit: {market.min_stake_limit} | Odd Limit: {market.odd_limit}
+                                  {maxProfitLimit !== null &&
+                                    ` | Max Profit Limit: ${maxProfitLimit}`}
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
 
                     {expandedMatchId === matchId &&
                       !marketLoading &&
