@@ -195,17 +195,18 @@ export default function App() {
                       !marketLoading &&
                       marketData[matchId]?.length > 0 &&
                       marketData[matchId].map((market) => {
-                        // ✅ Max Profit Limit logic for Tennis
-                        let maxProfitLimit = null;
-                        if (selectedSportName.toLowerCase() === "tennis") {
-                          const stake = Number(market.inplay_stake_limit);
-                          if (stake === 5000) maxProfitLimit = 100000;
-                          else if (stake === 10000) maxProfitLimit = 200000;
-                          else if (stake === 25000) maxProfitLimit = 300000;
-                          else if (stake === 50000) maxProfitLimit = 400000;
-                          else if (stake === 100000) maxProfitLimit = 500000;
-                          else if (stake === 200000) maxProfitLimit = 700000;
-                        }
+                        // ✅ Max Profit Limit logic for Tennis + Soccer
+let maxProfitLimit = null;
+const sportName = selectedSportName.toLowerCase();
+if (sportName === "tennis" || sportName === "soccer") {
+  const stake = Number(market.inplay_stake_limit);
+  if (stake === 5000) maxProfitLimit = 100000;
+  else if (stake === 10000) maxProfitLimit = 200000;
+  else if (stake === 25000) maxProfitLimit = 300000;
+  else if (stake === 50000) maxProfitLimit = 400000;
+  else if (stake === 100000) maxProfitLimit = 500000;
+  else if (stake === 200000) maxProfitLimit = 700000;
+}
 
                         return (
                           <tr key={market.id}>
