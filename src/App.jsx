@@ -85,8 +85,7 @@ export default function App() {
   };
 
   // Fetch market data for a match
-  // ✅ Fetch market data for a match
-const handleMatchClick = async (match) => {
+ const handleMatchClick = async (match) => {
   const matchId = match.eventId || match.event_id;
   if (expandedMatchId === matchId) {
     setExpandedMatchId(null);
@@ -105,25 +104,28 @@ const handleMatchClick = async (match) => {
     if (res.data.success) {
       const matchInfo = res.data.data.match;
 
-      // ✅ Combine normal and fancy data
+      // ✅ Normal market data
       const regularMarkets = matchInfo?.matchOddData || [];
-      const fancyMarkets = matchInfo?.fancyOddData?.ml || [];
 
-      const combinedMarkets = [
-        ...regularMarkets.map((m) => ({
-          ...m,
-          source: "regular",
-        })),
-        ...fancyMarkets.map((m) => ({
-          ...m,
-          source: "fancy",
-          cat: matchInfo?.fancyOddData?.cat || "Fancy Market",
-        })),
-      ];
+      // ✅ Fancy market data grouped by category
+      const fancyMarketsRaw = matchInfo?.fancyOddData?.ml || [];
+      const fancyByCat = fancyMarketsRaw.reduce((acc, item) => {
+        if (!acc[item.cat]) acc[item.cat] = [];
+        acc[item.cat].push(item);
+        return acc;
+      }, {});
+
+      const fancyMarkets = Object.entries(fancyByCat).map(([cat, markets]) => ({
+        cat,
+        markets,
+      }));
 
       setMarketData((prev) => ({
         ...prev,
-        [matchId]: combinedMarkets,
+        [matchId]: {
+          regular: regularMarkets,
+          fancy: fancyMarkets,
+        },
       }));
     }
   } catch (err) {
@@ -132,6 +134,7 @@ const handleMatchClick = async (match) => {
     setMarketLoading(false);
   }
 };
+
 
 
   if (loading) return <p>Loading sports...</p>;
@@ -213,62 +216,96 @@ const handleMatchClick = async (match) => {
                     )}
 
                     {expandedMatchId === matchId &&
-                      !marketLoading &&
-                      marketData[matchId]?.length > 0 &&
-marketData[matchId].map((market) => {
-  // ✅ Max Profit Limit logic for Tennis + Soccer
-  let maxProfitLimit = null;
-  const sportName = selectedSportName.toLowerCase();
-  if (sportName === "tennis" || sportName === "soccer") {
-    const stake = Number(market.inplay_stake_limit);
-    if (stake === 5000) maxProfitLimit = 100000;
-    else if (stake === 10000) maxProfitLimit = 200000;
-    else if (stake === 25000) maxProfitLimit = 300000;
-    else if (stake === 50000) maxProfitLimit = 400000;
-    else if (stake === 100000) maxProfitLimit = 500000;
-    else if (stake === 200000) maxProfitLimit = 700000;
-  }
+  !marketLoading &&
+  marketData[matchId] && (
+    <>
+      {/* ✅ Regular Markets */}
+      {marketData[matchId].regular?.length > 0 && (
+        <>
+          <tr>
+            <td colSpan="2">
+              <h4 className="market-section-title">Regular Markets</h4>
+            </td>
+          </tr>
+          {marketData[matchId].regular.map((market) => {
+            let maxProfitLimit = null;
+            const sportName = selectedSportName.toLowerCase();
+            if (sportName === "tennis" || sportName === "soccer") {
+              const stake = Number(market.inplay_stake_limit);
+              if (stake === 5000) maxProfitLimit = 100000;
+              else if (stake === 10000) maxProfitLimit = 200000;
+              else if (stake === 25000) maxProfitLimit = 300000;
+              else if (stake === 50000) maxProfitLimit = 400000;
+              else if (stake === 100000) maxProfitLimit = 500000;
+              else if (stake === 200000) maxProfitLimit = 700000;
+            }
 
-  return (
-    <tr key={market.id || market.mi}>
-      <td colSpan="2">
-        <div className="market-card">
-          <p className="market-title">
-            {market.source === "fancy"
-              ? `${market.cat || "Fancy Market"} — ${market.mn}`
-              : market.marketName || market.mn}
-          </p>
+            return (
+              <tr key={market.id || market.marketId}>
+                <td colSpan="2">
+                  <div className="market-card">
+                    <p className="market-title">
+                      {market.marketName || market.mn}
+                    </p>
+                    <p>
+                      Inplay Stake Limit: {market.inplay_stake_limit} | Max Market
+                      Limit: {market.max_market_limit} | Min Stake Limit:{" "}
+                      {market.min_stake_limit} | Odd Limit: {market.odd_limit}
+                      {maxProfitLimit !== null &&
+                        ` | Max Profit Limit: ${maxProfitLimit}`}
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </>
+      )}
 
-          {market.source === "fancy" ? (
-            // ✅ Fancy Market details
-            <p>
-              Min Stake: {market.mins} | Max Stake: {market.ms} | Max Market
-              Profit Limit: {market.mml}
-            </p>
-          ) : (
-            // ✅ Normal Market details
-            <p>
-              Inplay Stake Limit: {market.inplay_stake_limit} | Max Market
-              Limit: {market.max_market_limit} | Min Stake Limit:{" "}
-              {market.min_stake_limit} | Odd Limit: {market.odd_limit}
-              {maxProfitLimit !== null &&
-                ` | Max Profit Limit: ${maxProfitLimit}`}
-            </p>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-})
-                    }
+      {/* ✅ Fancy Markets Grouped by Category */}
+      {marketData[matchId].fancy?.length > 0 && (
+        <>
+          <tr>
+            <td colSpan="2">
+              <h4 className="market-section-title">Fancy Markets</h4>
+            </td>
+          </tr>
+          {marketData[matchId].fancy.map((group) => (
+            <React.Fragment key={group.cat}>
+              <tr>
+                <td colSpan="2">
+                  <h5 className="fancy-cat-title">🟢 {group.cat}</h5>
+                </td>
+              </tr>
 
-                    {expandedMatchId === matchId &&
-                      !marketLoading &&
-                      (!marketData[matchId] || marketData[matchId].length === 0) && (
-                        <tr>
-                          <td colSpan="2">No market data available</td>
-                        </tr>
-                      )}
+              {group.markets.map((market) => (
+                <tr key={market.mi}>
+                  <td colSpan="2">
+                    <div className="market-card fancy-card">
+                      <p className="market-title">{market.mn}</p>
+                      <p>
+                        Min Stake: {market.mins} | Max Stake: {market.ms} | Max
+                        Market Profit Limit: {market.mml}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </React.Fragment>
+          ))}
+        </>
+      )}
+
+      {/* ✅ Fallback */}
+      {marketData[matchId].regular?.length === 0 &&
+        marketData[matchId].fancy?.length === 0 && (
+          <tr>
+            <td colSpan="2">No market data available</td>
+          </tr>
+        )}
+    </>
+  )}
+
                   </React.Fragment>
                 );
               })}
