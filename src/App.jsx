@@ -85,33 +85,54 @@ export default function App() {
   };
 
   // Fetch market data for a match
-  const handleMatchClick = async (match) => {
-    const matchId = match.eventId || match.event_id;
-    if (expandedMatchId === matchId) {
-      setExpandedMatchId(null);
-      return;
-    }
+  // ✅ Fetch market data for a match
+const handleMatchClick = async (match) => {
+  const matchId = match.eventId || match.event_id;
+  if (expandedMatchId === matchId) {
+    setExpandedMatchId(null);
+    return;
+  }
 
-    setExpandedMatchId(matchId);
-    setMarketData((prev) => ({ ...prev, [matchId]: null }));
-    setMarketLoading(true);
+  setExpandedMatchId(matchId);
+  setMarketData((prev) => ({ ...prev, [matchId]: null }));
+  setMarketLoading(true);
 
-    try {
-      const res = await axios.get(
-        `https://zplay1.in/pb/api/v1/events/matchDetails/${matchId}`
-      );
-      if (res.data.success) {
-        setMarketData((prev) => ({
-          ...prev,
-          [matchId]: res.data.data.match?.matchOddData || [],
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching market data:", err);
-    } finally {
-      setMarketLoading(false);
+  try {
+    const res = await axios.get(
+      `https://zplay1.in/pb/api/v1/events/matchDetails/${matchId}`
+    );
+
+    if (res.data.success) {
+      const matchInfo = res.data.data.match;
+
+      // ✅ Combine normal and fancy data
+      const regularMarkets = matchInfo?.matchOddData || [];
+      const fancyMarkets = matchInfo?.fancyOddData?.ml || [];
+
+      const combinedMarkets = [
+        ...regularMarkets.map((m) => ({
+          ...m,
+          source: "regular",
+        })),
+        ...fancyMarkets.map((m) => ({
+          ...m,
+          source: "fancy",
+          cat: matchInfo?.fancyOddData?.cat || "Fancy Market",
+        })),
+      ];
+
+      setMarketData((prev) => ({
+        ...prev,
+        [matchId]: combinedMarkets,
+      }));
     }
-  };
+  } catch (err) {
+    console.error("Error fetching market data:", err);
+  } finally {
+    setMarketLoading(false);
+  }
+};
+
 
   if (loading) return <p>Loading sports...</p>;
 
@@ -194,36 +215,52 @@ export default function App() {
                     {expandedMatchId === matchId &&
                       !marketLoading &&
                       marketData[matchId]?.length > 0 &&
-                      marketData[matchId].map((market) => {
-                        // ✅ Max Profit Limit logic for Tennis + Soccer
-let maxProfitLimit = null;
-const sportName = selectedSportName.toLowerCase();
-if (sportName === "tennis" || sportName === "soccer") {
-  const stake = Number(market.inplay_stake_limit);
-  if (stake === 5000) maxProfitLimit = 100000;
-  else if (stake === 10000) maxProfitLimit = 200000;
-  else if (stake === 25000) maxProfitLimit = 300000;
-  else if (stake === 50000) maxProfitLimit = 400000;
-  else if (stake === 100000) maxProfitLimit = 500000;
-  else if (stake === 200000) maxProfitLimit = 700000;
-}
+marketData[matchId].map((market) => {
+  // ✅ Max Profit Limit logic for Tennis + Soccer
+  let maxProfitLimit = null;
+  const sportName = selectedSportName.toLowerCase();
+  if (sportName === "tennis" || sportName === "soccer") {
+    const stake = Number(market.inplay_stake_limit);
+    if (stake === 5000) maxProfitLimit = 100000;
+    else if (stake === 10000) maxProfitLimit = 200000;
+    else if (stake === 25000) maxProfitLimit = 300000;
+    else if (stake === 50000) maxProfitLimit = 400000;
+    else if (stake === 100000) maxProfitLimit = 500000;
+    else if (stake === 200000) maxProfitLimit = 700000;
+  }
 
-                        return (
-                          <tr key={market.id}>
-                            <td colSpan="2">
-                              <div className="market-card">
-                                <p>{market.marketName}</p>
-                                <p>
-                                  Inplay Stake Limit: {market.inplay_stake_limit} | Max Market Limit:{" "}
-                                  {market.max_market_limit} | Min Stake Limit: {market.min_stake_limit} | Odd Limit: {market.odd_limit}
-                                  {maxProfitLimit !== null &&
-                                    ` | Max Profit Limit: ${maxProfitLimit}`}
-                                </p>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+  return (
+    <tr key={market.id || market.mi}>
+      <td colSpan="2">
+        <div className="market-card">
+          <p className="market-title">
+            {market.source === "fancy"
+              ? `${market.cat || "Fancy Market"} — ${market.mn}`
+              : market.marketName || market.mn}
+          </p>
+
+          {market.source === "fancy" ? (
+            // ✅ Fancy Market details
+            <p>
+              Min Stake: {market.mins} | Max Stake: {market.ms} | Max Market
+              Profit Limit: {market.mml}
+            </p>
+          ) : (
+            // ✅ Normal Market details
+            <p>
+              Inplay Stake Limit: {market.inplay_stake_limit} | Max Market
+              Limit: {market.max_market_limit} | Min Stake Limit:{" "}
+              {market.min_stake_limit} | Odd Limit: {market.odd_limit}
+              {maxProfitLimit !== null &&
+                ` | Max Profit Limit: ${maxProfitLimit}`}
+            </p>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+})
+                    }
 
                     {expandedMatchId === matchId &&
                       !marketLoading &&
