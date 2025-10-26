@@ -111,7 +111,7 @@ app.get("/soccer-competitions", async (req, res) => {
     // Filter only soccer events (custom_active === "G")
     const soccerEvents = events.filter((ev) => ev.custom_active === "G");
 
-    // Unique competition names for soccer
+    // Unique competition names ford soccer
     const uniqueCompetitions = [
       ...new Set(soccerEvents.map((ev) => ev.competition_name).filter(Boolean)),
     ];
