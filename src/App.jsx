@@ -52,15 +52,33 @@ export default function App() {
 
     try {
       // ⚽ If sport is soccer → hit your backend API
-      if (sport.name.toLowerCase() === "soccer") {
-        const res = await axios.get(`${BASE_URL}/soccer-competitions`);
-        const leagueArray = res.data.competitions.map((name) => ({
-          name,
-          matches: [],
-        }));
-        setLeagues(leagueArray);
-        return;
-      }
+     // ⚽ If sport is soccer → fetch directly from Dramo247 API (frontend)
+if (sport.name.toLowerCase() === "soccer") {
+  const res = await axios.get("https://api.dramo247.com/api/guest/event_list", {
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Referer": "https://dramo247.com/",
+      "Origin": "https://dramo247.com",
+    },
+  });
+
+  const events = res.data?.data?.events || [];
+
+  // Filter only soccer events
+  const soccerEvents = events.filter(ev => ev.custom_active === "G");
+
+  // Unique competition names
+  const uniqueCompetitions = [
+    ...new Set(soccerEvents.map(ev => ev.competition_name).filter(Boolean))
+  ];
+
+  const leagueArray = uniqueCompetitions.map(name => ({ name, matches: [] }));
+  setLeagues(leagueArray);
+  return;
+}
+
 
       // 🏏 Otherwise, fetch from original API
       const res = await axios.get(
