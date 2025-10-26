@@ -158,7 +158,7 @@ if (sport.name.toLowerCase() === "soccer") {
       {/* For soccer, matches section will not show */}
       {selectedSportName.toLowerCase() !== "soccer" && matches.length > 0 && (
         <div className="matches-container">
-          <h3>Matches</h3>
+          <h3>Matcheds</h3>
           <table className="events-table">
             <thead>
               <tr>
