@@ -106,6 +106,12 @@ export default function App() {
         }));
 
         setLeagues(leagueArray);
+
+        // For tennis, set matches of all leagues to display in table
+        if (sport.name.toLowerCase() === "tennis") {
+          const allMatches = res.data.data;
+          setMatches(allMatches);
+        }
       }
     } catch (err) {
       console.error("Error fetching leagues:", err);
@@ -122,10 +128,8 @@ export default function App() {
 
   // Handle match click (fetch and toggle tennis match details)
   const handleMatchClick = async (match) => {
-    // Toggle expansion
     setExpandedMatch(expandedMatch === match.matchId ? null : match.matchId);
 
-    // Already fetched? Skip API
     if (matchDetails[match.matchId]) return;
 
     try {
@@ -177,50 +181,62 @@ export default function App() {
           </h2>
           <div className="leagues-scroll">
             {leagues.map((league, idx) => (
-              <div key={idx}>
-                <div
-                  className={`league-box ${
-                    selectedLeague?.name === league.name ? "selected" : ""
-                  }`}
-                  onClick={() => handleLeagueClick(league)}
-                >
-                  <p className="league-name">{league.name}</p>
-                  {selectedSportName.toLowerCase() !== "soccer" && (
-                    <p className="league-count">{league.matches.length} matches</p>
-                  )}
-                </div>
-
-                {/* Tennis matches */}
-                {selectedSportName.toLowerCase() === "tennis" &&
-                  expandedLeague === league.name &&
-                  league.matches.map((match) => (
-                    <div key={match.matchId} className="match-box">
-                      <div
-                        onClick={() => handleMatchClick(match)}
-                        style={{ cursor: "pointer", fontWeight: "bold" }}
-                      >
-                        {match.event_name} -{" "}
-                        {new Date(match.event_date).toLocaleString()}{" "}
-                        {match.isMatchLive ? "(Live)" : ""}
-                      </div>
-
-                      {/* Show matchOddData only if match is expanded */}
-                      {expandedMatch === match.matchId &&
-                        matchDetails[match.matchId]?.map((odd) => (
-                          <div key={odd.id} className="match-odd-box">
-                            <p>Market Name: {odd.marketName}</p>
-                            <p>Odd Limit: {odd.odd_limit}</p>
-                            <p>Stake Limit: {odd.stake_limit}</p>
-                            <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
-                            <p>Min Stake Limit: {odd.min_stake_limit}</p>
-                            <p>Max Market Limit: {odd.max_market_limit}</p>
-                          </div>
-                        ))}
-                    </div>
-                  ))}
+              <div
+                key={idx}
+                className={`league-box ${
+                  selectedLeague?.name === league.name ? "selected" : ""
+                }`}
+                onClick={() => handleLeagueClick(league)}
+              >
+                <p className="league-name">{league.name}</p>
+                {selectedSportName.toLowerCase() !== "soccer" && (
+                  <p className="league-count">{league.matches.length} matches</p>
+                )}
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Tennis Matches Table */}
+      {selectedSportName.toLowerCase() === "tennis" && matches.length > 0 && (
+        <div className="events-container">
+          <h3>Tennis Matches</h3>
+          <table className="events-table">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>League</th>
+                <th>Date / Time</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              {matches.map((match) => (
+                <React.Fragment key={match.matchId}>
+                  <tr onClick={() => handleMatchClick(match)}>
+                    <td>{match.event_name}</td>
+                    <td>{match.league_name}</td>
+                    <td>{new Date(match.event_date).toLocaleString()}</td>
+                    <td>{match.isMatchLive ? "Yes" : "No"}</td>
+                  </tr>
+                  {expandedMatch === match.matchId &&
+                    matchDetails[match.matchId]?.map((odd) => (
+                      <tr key={odd.id} className="market-card">
+                        <td colSpan={4}>
+                          <p className="market-name">{odd.marketName}</p>
+                          <p>Odd Limit: {odd.odd_limit}</p>
+                          <p>Stake Limit: {odd.stake_limit}</p>
+                          <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
+                          <p>Min Stake Limit: {odd.min_stake_limit}</p>
+                          <p>Max Market Limit: {odd.max_market_limit}</p>
+                        </td>
+                      </tr>
+                    ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -228,7 +244,7 @@ export default function App() {
       {selectedSportName.toLowerCase() !== "soccer" &&
         selectedSportName.toLowerCase() !== "tennis" &&
         matches.length > 0 && (
-          <div className="matches-container">
+          <div className="events-container">
             <h3>Matches</h3>
             <table className="events-table">
               <thead>

@@ -199,3 +199,56 @@
   width: 100%;
   margin-top: 8px;
 }
+
+
+/* Tennis Matches Table */
+.events-container h3 {
+  margin-top: 20px;
+  color: #2563eb;
+  font-weight: bold;
+}
+
+/* Table row hover effect */
+.events-table tbody tr:hover {
+  background-color: #e0f2fe;
+  cursor: pointer;
+}
+
+/* Expanded market/odds rows */
+.market-card td {
+  background-color: #fef3c7; /* Soft yellow */
+  padding: 10px 12px;
+  border-top: 1px solid #fcd34d;
+  border-bottom: 1px solid #fcd34d;
+}
+
+.market-card p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #111827;
+}
+
+.market-name {
+  font-weight: 600;
+  color: #b45309; /* Darker brown for market name */
+  margin-bottom: 4px;
+}
+
+/* Optional: small arrow to indicate expandable row */
+.events-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.events-table tbody tr.expanded {
+  background-color: #fef3c7; /* same as market card for continuity */
+}
+
+/* Make table responsive */
+.events-container {
+  overflow-x: auto;
+}
+
+/* Optional: alternate row colors */
+.events-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
