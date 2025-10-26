@@ -14,6 +14,8 @@ export default function App() {
   const [matches, setMatches] = useState([]);
   const [matchDetails, setMatchDetails] = useState({}); // Store fetched match details
 
+const [expandedMatch, setExpandedMatch] = useState(null);
+
   const BASE_URL = "https://sports-panel.onrender.com";
 
   // Fetch sports
@@ -120,24 +122,30 @@ export default function App() {
   };
 
   // Fetch match details for tennis
-  const fetchMatchDetails = async (match) => {
-    if (matchDetails[match.matchId]) return; // Already fetched
+ const handleMatchClick = async (match) => {
+  // Toggle expansion
+  setExpandedMatch(expandedMatch === match.matchId ? null : match.matchId);
 
-    try {
-      const res = await axios.get(
-        `https://central.zplay1.in/pb/api/v1/events/matchDetails/${match.eventId || match.matchId}`
-      );
+  // Already fetched? Skip API
+  if (matchDetails[match.matchId]) return;
 
-      if (res.data.success && res.data.data?.match?.matchOddData) {
-        setMatchDetails((prev) => ({
-          ...prev,
-          [match.matchId]: res.data.data.match.matchOddData,
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching match details:", err);
+  try {
+    const res = await axios.get(
+      `https://central.zplay1.in/pb/api/v1/events/matchDetails/${match.event_id}`
+    );
+
+    if (res.data.success && res.data.data?.match) {
+      const oddData = res.data.data.match.matchOddData || [];
+
+      setMatchDetails((prev) => ({
+        ...prev,
+        [match.matchId]: oddData,
+      }));
     }
-  };
+  } catch (err) {
+    console.error("Error fetching match details:", err);
+  }
+};
 
   if (loading) return <p>Loading sports...</p>;
 
@@ -184,33 +192,35 @@ export default function App() {
                 </div>
 
                 {/* Tennis: show matches if this league is expanded */}
-                {selectedSportName.toLowerCase() === "tennis" &&
-                  expandedLeague === league.name &&
-                  league.matches.map((match) => (
-                    <div key={match.matchId} className="match-box">
-                      <div
-                        onClick={() => fetchMatchDetails(match)}
-                        style={{ cursor: "pointer", fontWeight: "bold" }}
-                      >
-                        {match.event_name} -{" "}
-                        {new Date(match.event_date).toLocaleString()}{" "}
-                        {match.isMatchLive ? "(Live)" : ""}
-                      </div>
+                {/* Tennis matches */}
+{selectedSportName.toLowerCase() === "tennis" &&
+  expandedLeague === league.name &&
+  league.matches.map((match) => (
+    <div key={match.matchId} className="match-box">
+      <div
+        onClick={() => handleMatchClick(match)}
+        style={{ cursor: "pointer", fontWeight: "bold" }}
+      >
+        {match.event_name} -{" "}
+        {new Date(match.event_date).toLocaleString()}{" "}
+        {match.isMatchLive ? "(Live)" : ""}
+      </div>
 
-                      {/* Show matchOddData if fetched */}
-                      {matchDetails[match.matchId] &&
-                        matchDetails[match.matchId].map((odd) => (
-                          <div key={odd.id} className="match-odd-box">
-                            <p>Market Name: {odd.marketName}</p>
-                            <p>Odd Limit: {odd.odd_limit}</p>
-                            <p>Stake Limit: {odd.stake_limit}</p>
-                            <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
-                            <p>Min Stake Limit: {odd.min_stake_limit}</p>
-                            <p>Max Market Limit: {odd.max_market_limit}</p>
-                          </div>
-                        ))}
-                    </div>
-                  ))}
+      {/* Show matchOddData only if match is expanded */}
+      {expandedMatch === match.matchId &&
+        matchDetails[match.matchId]?.map((odd) => (
+          <div key={odd.id} className="match-odd-box">
+            <p>Market Name: {odd.marketName}</p>
+            <p>Odd Limit: {odd.odd_limit}</p>
+            <p>Stake Limit: {odd.stake_limit}</p>
+            <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
+            <p>Min Stake Limit: {odd.min_stake}</p>
+            <p>Max Market Limit: {odd.max_market_limit}</p>
+          </div>
+        ))}
+    </div>
+  ))}
+
               </div>
             ))}
           </div>
