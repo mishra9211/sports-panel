@@ -120,11 +120,15 @@ export default function App() {
 
   // Handle league click (tennis only)
   const handleLeagueClick = (league) => {
-    if (selectedSportName.toLowerCase() === "tennis") {
-      setExpandedLeague(expandedLeague === league.name ? null : league.name);
-    }
-    setSelectedLeague(league);
-  };
+  if (selectedSportName.toLowerCase() === "tennis") {
+    setExpandedLeague(expandedLeague === league.name ? null : league.name);
+
+    // Filter matches for selected league
+    const filteredMatches = league.matches;
+    setMatches(filteredMatches);
+  }
+  setSelectedLeague(league);
+};
 
   // Handle match click (fetch and toggle tennis match details)
   const handleMatchClick = async (match) => {
@@ -200,45 +204,46 @@ export default function App() {
 
       {/* Tennis Matches Table */}
       {selectedSportName.toLowerCase() === "tennis" && matches.length > 0 && (
-        <div className="events-container">
-          <h3>Tennis Matches</h3>
-          <table className="events-table">
-            <thead>
-              <tr>
-                <th>Event</th>
-                <th>League</th>
-                <th>Date / Time</th>
-                <th>Live</th>
-              </tr>
-            </thead>
-            <tbody>
-              {matches.map((match) => (
-                <React.Fragment key={match.matchId}>
-                  <tr onClick={() => handleMatchClick(match)}>
-                    <td>{match.event_name}</td>
-                    <td>{match.league_name}</td>
-                    <td>{new Date(match.event_date).toLocaleString()}</td>
-                    <td>{match.isMatchLive ? "Yes" : "No"}</td>
-                  </tr>
-                  {expandedMatch === match.matchId &&
-                    matchDetails[match.matchId]?.map((odd) => (
-                      <tr key={odd.id} className="market-card">
-                        <td colSpan={4}>
-                          <p className="market-name">{odd.marketName}</p>
-                          <p>Odd Limit: {odd.odd_limit}</p>
-                          <p>Stake Limit: {odd.stake_limit}</p>
-                          <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
-                          <p>Min Stake Limit: {odd.min_stake_limit}</p>
-                          <p>Max Market Limit: {odd.max_market_limit}</p>
-                        </td>
-                      </tr>
-                    ))}
-                </React.Fragment>
+  <div className="events-container">
+    <h3>Tennis Matches - {selectedLeague?.name}</h3>
+    <table className="events-table">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>League</th>
+          <th>Date / Time</th>
+          <th>Live</th>
+        </tr>
+      </thead>
+      <tbody>
+        {matches.map((match) => (
+          <React.Fragment key={match.matchId}>
+            <tr onClick={() => handleMatchClick(match)}>
+              <td>{match.event_name}</td>
+              <td>{match.league_name}</td>
+              <td>{new Date(match.event_date).toLocaleString()}</td>
+              <td>{match.isMatchLive ? "Yes" : "No"}</td>
+            </tr>
+            {expandedMatch === match.matchId &&
+              matchDetails[match.matchId]?.map((odd) => (
+                <tr key={odd.id} className="market-card">
+                  <td colSpan={4}>
+                    <p className="market-name">{odd.marketName}</p>
+                    <p>Odd Limit: {odd.odd_limit}</p>
+                    <p>Stake Limit: {odd.stake_limit}</p>
+                    <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
+                    <p>Min Stake Limit: {odd.min_stake_limit}</p>
+                    <p>Max Market Limit: {odd.max_market_limit}</p>
+                  </td>
+                </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+          </React.Fragment>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
 
       {/* Other sports (non-soccer, non-tennis) */}
       {selectedSportName.toLowerCase() !== "soccer" &&
