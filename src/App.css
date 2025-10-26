@@ -3,6 +3,7 @@
   min-height: 100vh;
   padding: 20px;
   background-color: #f3f4f6;
+  font-family: 'Inter', sans-serif;
 }
 
 .app-title {
@@ -77,73 +78,6 @@
   transform: scale(1.05);
 }
 
-/* Events Table */
-.events-container {
-  margin-top: 20px;
-  overflow-x: auto;
-}
-
-.events-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  min-width: 600px; /* ensures scroll on small screens */
-}
-
-.events-table th,
-.events-table td {
-  padding: 10px 12px;
-  text-align: left;
-}
-
-.events-table thead {
-  background-color: #2563eb;
-  color: #fff;
-}
-
-.events-table tbody tr:nth-child(even) {
-  background-color: #f3f4f6;
-}
-
-.events-table tbody tr:hover {
-  background-color: #e0f2fe;
-  cursor: pointer;
-}
-
-.events-table td {
-  font-size: 14px;
-  color: #111827;
-}
-
-
-.event-row:hover {
-  background-color: #e0f2fe;
-  cursor: pointer;
-}
-
-/* Market Row */
-.market-row td {
-  background-color: #f9fafb;
-  padding: 10px 12px;
-}
-
-/* Market Card */
-.market-card {
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 8px;
-  margin-bottom: 6px;
-  background-color: #fff;
-}
-
-.market-name {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
 /* Leagues */
 .leagues-container {
   margin-top: 20px;
@@ -192,4 +126,70 @@
 .league-count {
   font-size: 13px;
   color: #6b7280;
+}
+
+/* Tennis Matches inside expanded league */
+.match-box {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background-color: #fef3c7; /* light yellow */
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Events Table */
+.events-container {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  min-width: 600px; /* ensures horizontal scroll on small screens */
+}
+
+.events-table th,
+.events-table td {
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.events-table thead {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.events-table tbody tr:nth-child(even) {
+  background-color: #f3f4f6;
+}
+
+.events-table tbody tr:hover {
+  background-color: #e0f2fe;
+  cursor: pointer;
+}
+
+.events-table td {
+  font-size: 14px;
+  color: #111827;
+}
+
+/* Optional: smaller font for market cards */
+.market-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 6px;
+  background-color: #fff;
+}
+
+.market-name {
+  font-weight: 600;
+  margin-bottom: 4px;
 }
