@@ -86,20 +86,32 @@ app.get("/sports", async (req, res) => {
 
 
 
-// ⚽ Soccer Competitions route (fixed for real API format)
+// ⚽ Soccer Competitions route (fixed with browser headers)
 app.get("/soccer-competitions", async (req, res) => {
   try {
-    const response = await axios.get("https://api.dramo247.com/api/guest/event_list");
+    const response = await axios.get(
+      "https://api.dramo247.com/api/guest/event_list",
+      {
+        headers: {
+          "Accept": "application/json, text/plain, */*",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Referer": "https://dramo247.com/",
+          "Origin": "https://dramo247.com",
+        },
+      }
+    );
+
     const events = response.data?.data?.events;
 
     if (!Array.isArray(events)) {
       return res.status(400).json({ message: "Invalid data format from API" });
     }
 
-    // ✅ Filter only soccer events (custom_active === "G")
+    // Filter only soccer events (custom_active === "G")
     const soccerEvents = events.filter((ev) => ev.custom_active === "G");
 
-    // ✅ Unique competition names for soccer
+    // Unique competition names for soccer
     const uniqueCompetitions = [
       ...new Set(soccerEvents.map((ev) => ev.competition_name).filter(Boolean)),
     ];
