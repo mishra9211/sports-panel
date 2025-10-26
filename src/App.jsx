@@ -212,7 +212,7 @@ export default function App() {
                             <p>Odd Limit: {odd.odd_limit}</p>
                             <p>Stake Limit: {odd.stake_limit}</p>
                             <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
-                            <p>Min Stake Limit: {odd.min_stake}</p>
+                            <p>Min Stake Limit: {odd.min_stake_limit}</p>
                             <p>Max Market Limit: {odd.max_market_limit}</p>
                           </div>
                         ))}
