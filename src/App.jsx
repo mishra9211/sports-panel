@@ -20,6 +20,7 @@ export default function App() {
     async function fetchSports() {
       try {
         const res = await axios.get(`${BASE_URL}/sports`);
+        console.log("Fetched sports:", res.data);
 
         const priorityOrder = ["cricket", "tennis", "soccer"];
         const sortedSports = res.data.sort((a, b) => {
@@ -68,6 +69,8 @@ export default function App() {
         );
 
         const events = res.data?.data?.events || [];
+        console.log("Soccer events fetched:", events);
+
         const soccerEvents = events.filter((ev) => ev.event_type_id === 1);
         const uniqueCompetitions = [
           ...new Set(
@@ -87,6 +90,7 @@ export default function App() {
       const res = await axios.get(
         `https://central.zplay1.in/pb/api/v1/events/matches/${sport.id}`
       );
+      console.log("Matches API response:", res.data);
 
       if (res.data.success) {
         const leagueMap = {};
@@ -102,6 +106,7 @@ export default function App() {
           matches: leagueMap[leagueName],
         }));
 
+        console.log("Processed leagues with matches:", leagueArray);
         setLeagues(leagueArray);
       }
     } catch (err) {
@@ -165,7 +170,7 @@ export default function App() {
                 {selectedSportName.toLowerCase() === "tennis" &&
                   expandedLeague === league.name &&
                   league.matches.map((match) => (
-                    <div key={match.event_id} className="match-box">
+                    <div key={match.matchId} className="match-box">
                       {match.event_name} -{" "}
                       {new Date(match.event_date).toLocaleString()}{" "}
                       {match.isMatchLive ? "(Live)" : ""}
