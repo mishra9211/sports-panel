@@ -84,17 +84,26 @@ app.get("/sports", async (req, res) => {
 });
 
 
-// Fetch & filter soccer competitions
+
 // ⚽ Soccer Competitions route
 app.get("/soccer-competitions", async (req, res) => {
   try {
-    const { data } = await axios.get("https://api.dramo247.com/api/guest/event_list");
+    const response = await axios.get("https://api.dramo247.com/api/guest/event_list");
+    const apiData = response.data;
 
-    // Filter only soccer (custom_active = "G")
-    const soccerEvents = data.filter((ev) => ev.custom_active === "G");
+    if (!apiData?.success || !Array.isArray(apiData?.data)) {
+      return res.status(400).json({ message: "Invalid data format from API" });
+    }
 
-    // Unique competitions
-    const uniqueCompetitions = [...new Set(soccerEvents.map((ev) => ev.competition_name))];
+    // ✅ Filter only soccer matches (custom_active === "G")
+    const soccerEvents = apiData.data.filter((ev) => ev.custom_active === "G");
+
+    // ✅ Get unique competition names
+    const uniqueCompetitions = [
+      ...new Set(
+        soccerEvents.map((ev) => ev.competition_name).filter(Boolean)
+      ),
+    ];
 
     res.json({
       count: uniqueCompetitions.length,
@@ -102,9 +111,13 @@ app.get("/soccer-competitions", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error fetching soccer competitions:", err.message);
-    res.status(500).json({ message: "Error fetching soccer competitions" });
+    res.status(500).json({
+      message: "Error fetching soccer competitions",
+      error: err.message,
+    });
   }
 });
+
 
 
 const PORT = process.env.PORT || 8000;
