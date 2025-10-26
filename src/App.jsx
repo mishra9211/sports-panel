@@ -13,7 +13,7 @@ export default function App() {
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [matches, setMatches] = useState([]);
 
-  const BASE_URL = "https://sports-panel.onrender.com"; // ✅ Your backend URL
+  const BASE_URL = "https://sports-panel.onrender.com";
 
   // Fetch sports
   useEffect(() => {
@@ -21,7 +21,6 @@ export default function App() {
       try {
         const res = await axios.get(`${BASE_URL}/sports`);
 
-        // Priority order: cricket, tennis, soccer
         const priorityOrder = ["cricket", "tennis", "soccer"];
         const sortedSports = res.data.sort((a, b) => {
           const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
@@ -69,11 +68,7 @@ export default function App() {
         );
 
         const events = res.data?.data?.events || [];
-
-        // Filter only soccer events
         const soccerEvents = events.filter((ev) => ev.event_type_id === 1);
-
-        // Unique competition names
         const uniqueCompetitions = [
           ...new Set(
             soccerEvents.map((ev) => ev.competition_name).filter(Boolean)
@@ -143,7 +138,7 @@ export default function App() {
         ))}
       </div>
 
-      {/* Leagues (for Soccer this will show unique competitions) */}
+      {/* Leagues */}
       {leagues.length > 0 && (
         <div className="leagues-container">
           <h2>
@@ -171,7 +166,9 @@ export default function App() {
                   expandedLeague === league.name &&
                   league.matches.map((match) => (
                     <div key={match.event_id} className="match-box">
-                      {match.event_name}
+                      {match.event_name} -{" "}
+                      {new Date(match.event_date).toLocaleString()}{" "}
+                      {match.isMatchLive ? "(Live)" : ""}
                     </div>
                   ))}
               </div>
@@ -180,7 +177,7 @@ export default function App() {
         </div>
       )}
 
-      {/* For other sports (non-soccer), matches section */}
+      {/* Other sports (non-soccer, non-tennis) */}
       {selectedSportName.toLowerCase() !== "soccer" &&
         selectedSportName.toLowerCase() !== "tennis" &&
         matches.length > 0 && (
