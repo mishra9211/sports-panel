@@ -13,8 +13,7 @@ export default function App() {
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [matches, setMatches] = useState([]);
   const [matchDetails, setMatchDetails] = useState({}); // Store fetched match details
-
-const [expandedMatch, setExpandedMatch] = useState(null);
+  const [expandedMatch, setExpandedMatch] = useState(null);
 
   const BASE_URL = "https://sports-panel.onrender.com";
 
@@ -121,31 +120,31 @@ const [expandedMatch, setExpandedMatch] = useState(null);
     setSelectedLeague(league);
   };
 
-  // Fetch match details for tennis
- const handleMatchClick = async (match) => {
-  // Toggle expansion
-  setExpandedMatch(expandedMatch === match.matchId ? null : match.matchId);
+  // Handle match click (fetch and toggle tennis match details)
+  const handleMatchClick = async (match) => {
+    // Toggle expansion
+    setExpandedMatch(expandedMatch === match.matchId ? null : match.matchId);
 
-  // Already fetched? Skip API
-  if (matchDetails[match.matchId]) return;
+    // Already fetched? Skip API
+    if (matchDetails[match.matchId]) return;
 
-  try {
-    const res = await axios.get(
-      `https://central.zplay1.in/pb/api/v1/events/matchDetails/${match.event_id}`
-    );
+    try {
+      const res = await axios.get(
+        `https://central.zplay1.in/pb/api/v1/events/matchDetails/${match.event_id}`
+      );
 
-    if (res.data.success && res.data.data?.match) {
-      const oddData = res.data.data.match.matchOddData || [];
+      if (res.data.success && res.data.data?.match) {
+        const oddData = res.data.data.match.matchOddData || [];
 
-      setMatchDetails((prev) => ({
-        ...prev,
-        [match.matchId]: oddData,
-      }));
+        setMatchDetails((prev) => ({
+          ...prev,
+          [match.matchId]: oddData,
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching match details:", err);
     }
-  } catch (err) {
-    console.error("Error fetching match details:", err);
-  }
-};
+  };
 
   if (loading) return <p>Loading sports...</p>;
 
@@ -191,36 +190,34 @@ const [expandedMatch, setExpandedMatch] = useState(null);
                   )}
                 </div>
 
-                {/* Tennis: show matches if this league is expanded */}
                 {/* Tennis matches */}
-{selectedSportName.toLowerCase() === "tennis" &&
-  expandedLeague === league.name &&
-  league.matches.map((match) => (
-    <div key={match.matchId} className="match-box">
-      <div
-        onClick={() => handleMatchClick(match)}
-        style={{ cursor: "pointer", fontWeight: "bold" }}
-      >
-        {match.event_name} -{" "}
-        {new Date(match.event_date).toLocaleString()}{" "}
-        {match.isMatchLive ? "(Live)" : ""}
-      </div>
+                {selectedSportName.toLowerCase() === "tennis" &&
+                  expandedLeague === league.name &&
+                  league.matches.map((match) => (
+                    <div key={match.matchId} className="match-box">
+                      <div
+                        onClick={() => handleMatchClick(match)}
+                        style={{ cursor: "pointer", fontWeight: "bold" }}
+                      >
+                        {match.event_name} -{" "}
+                        {new Date(match.event_date).toLocaleString()}{" "}
+                        {match.isMatchLive ? "(Live)" : ""}
+                      </div>
 
-      {/* Show matchOddData only if match is expanded */}
-      {expandedMatch === match.matchId &&
-        matchDetails[match.matchId]?.map((odd) => (
-          <div key={odd.id} className="match-odd-box">
-            <p>Market Name: {odd.marketName}</p>
-            <p>Odd Limit: {odd.odd_limit}</p>
-            <p>Stake Limit: {odd.stake_limit}</p>
-            <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
-            <p>Min Stake Limit: {odd.min_stake}</p>
-            <p>Max Market Limit: {odd.max_market_limit}</p>
-          </div>
-        ))}
-    </div>
-  ))}
-
+                      {/* Show matchOddData only if match is expanded */}
+                      {expandedMatch === match.matchId &&
+                        matchDetails[match.matchId]?.map((odd) => (
+                          <div key={odd.id} className="match-odd-box">
+                            <p>Market Name: {odd.marketName}</p>
+                            <p>Odd Limit: {odd.odd_limit}</p>
+                            <p>Stake Limit: {odd.stake_limit}</p>
+                            <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
+                            <p>Min Stake Limit: {odd.min_stake}</p>
+                            <p>Max Market Limit: {odd.max_market_limit}</p>
+                          </div>
+                        ))}
+                    </div>
+                  ))}
               </div>
             ))}
           </div>
