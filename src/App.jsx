@@ -107,16 +107,13 @@ export default function App() {
 
         setLeagues(leagueArray);
 
-        // For tennis, set matches of all leagues to display in table
-        if (sport.name.toLowerCase() === "tennis") {
-          const allMatches = res.data.data;
-          setMatches(allMatches);
-        }
+      } else {
+        console.error("Error fetching matches:", res.data.message);
       }
     } catch (err) {
-      console.error("Error fetching leagues:", err);
+      console.error("Error handling sport click:", err);
     }
-  };
+  }
 
   // Handle league click (tennis only)
   const handleLeagueClick = (league) => {
