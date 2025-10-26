@@ -12,6 +12,7 @@ export default function App() {
   const [leagues, setLeagues] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [matches, setMatches] = useState([]);
+  const [matchDetails, setMatchDetails] = useState({}); // Store fetched match details
 
   const BASE_URL = "https://sports-panel.onrender.com";
 
@@ -53,7 +54,7 @@ export default function App() {
     setExpandedLeague(null);
 
     try {
-      // Soccer: fetch from Dramo247 API
+      // Soccer
       if (sport.name.toLowerCase() === "soccer") {
         const res = await axios.get(
           "https://api.dramo247.com/api/guest/event_list",
@@ -69,8 +70,6 @@ export default function App() {
         );
 
         const events = res.data?.data?.events || [];
-        console.log("Soccer events fetched:", events);
-
         const soccerEvents = events.filter((ev) => ev.event_type_id === 1);
         const uniqueCompetitions = [
           ...new Set(
@@ -86,11 +85,10 @@ export default function App() {
         return;
       }
 
-      // Other sports (including tennis)
+      // Other sports including tennis
       const res = await axios.get(
         `https://central.zplay1.in/pb/api/v1/events/matches/${sport.id}`
       );
-      console.log("Matches API response:", res.data);
 
       if (res.data.success) {
         const leagueMap = {};
@@ -106,7 +104,6 @@ export default function App() {
           matches: leagueMap[leagueName],
         }));
 
-        console.log("Processed leagues with matches:", leagueArray);
         setLeagues(leagueArray);
       }
     } catch (err) {
@@ -120,6 +117,26 @@ export default function App() {
       setExpandedLeague(expandedLeague === league.name ? null : league.name);
     }
     setSelectedLeague(league);
+  };
+
+  // Fetch match details for tennis
+  const fetchMatchDetails = async (match) => {
+    if (matchDetails[match.matchId]) return; // Already fetched
+
+    try {
+      const res = await axios.get(
+        `https://central.zplay1.in/pb/api/v1/events/matchDetails/${match.eventId || match.matchId}`
+      );
+
+      if (res.data.success && res.data.data?.match?.matchOddData) {
+        setMatchDetails((prev) => ({
+          ...prev,
+          [match.matchId]: res.data.data.match.matchOddData,
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching match details:", err);
+    }
   };
 
   if (loading) return <p>Loading sports...</p>;
@@ -171,9 +188,27 @@ export default function App() {
                   expandedLeague === league.name &&
                   league.matches.map((match) => (
                     <div key={match.matchId} className="match-box">
-                      {match.event_name} -{" "}
-                      {new Date(match.event_date).toLocaleString()}{" "}
-                      {match.isMatchLive ? "(Live)" : ""}
+                      <div
+                        onClick={() => fetchMatchDetails(match)}
+                        style={{ cursor: "pointer", fontWeight: "bold" }}
+                      >
+                        {match.event_name} -{" "}
+                        {new Date(match.event_date).toLocaleString()}{" "}
+                        {match.isMatchLive ? "(Live)" : ""}
+                      </div>
+
+                      {/* Show matchOddData if fetched */}
+                      {matchDetails[match.matchId] &&
+                        matchDetails[match.matchId].map((odd) => (
+                          <div key={odd.id} className="match-odd-box">
+                            <p>Market Name: {odd.marketName}</p>
+                            <p>Odd Limit: {odd.odd_limit}</p>
+                            <p>Stake Limit: {odd.stake_limit}</p>
+                            <p>Inplay Stake Limit: {odd.inplay_stake_limit}</p>
+                            <p>Min Stake Limit: {odd.min_stake_limit}</p>
+                            <p>Max Market Limit: {odd.max_market_limit}</p>
+                          </div>
+                        ))}
                     </div>
                   ))}
               </div>
