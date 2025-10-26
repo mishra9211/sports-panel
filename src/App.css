@@ -193,3 +193,9 @@
   font-weight: 600;
   margin-bottom: 4px;
 }
+
+.matches-list {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
