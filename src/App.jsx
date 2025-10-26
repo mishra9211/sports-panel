@@ -67,7 +67,7 @@ if (sport.name.toLowerCase() === "soccer") {
   const events = res.data?.data?.events || [];
 
   // Filter only soccer events
-  const soccerEvents = events.filter(ev => ev.custom_active === "G");
+  const soccerEvents = events.filter(ev => ev.event_type_id === 1);
 
   // Unique competition names
   const uniqueCompetitions = [
