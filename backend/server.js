@@ -83,5 +83,31 @@ app.get("/sports", async (req, res) => {
   }
 });
 
+
+// Fetch & filter soccer competitions
+// ⚽ Soccer Competitions route
+app.get("/soccer-competitions", async (req, res) => {
+  try {
+    const { data } = await axios.get("https://api.dramo247.com/api/guest/event_list");
+
+    // Filter only soccer (custom_active = "G")
+    const soccerEvents = data.filter((ev) => ev.custom_active === "G");
+
+    // Unique competitions
+    const uniqueCompetitions = [...new Set(soccerEvents.map((ev) => ev.competition_name))];
+
+    res.json({
+      count: uniqueCompetitions.length,
+      competitions: uniqueCompetitions,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching soccer competitions:", err.message);
+    res.status(500).json({ message: "Error fetching soccer competitions" });
+  }
+});
+
+
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+

@@ -6,17 +6,13 @@ export default function App() {
   const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState(null);
-  const [selectedSportName, setSelectedSportName] = useState(""); // ✅ Tennis Max Profit logic
+  const [selectedSportName, setSelectedSportName] = useState("");
 
   const [leagues, setLeagues] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState(null);
-
   const [matches, setMatches] = useState([]);
-  const [expandedMatchId, setExpandedMatchId] = useState(null);
-  const [marketData, setMarketData] = useState({});
-  const [marketLoading, setMarketLoading] = useState(false);
 
-  const BASE_URL = "https://sports-panel.onrender.com"; // Live backend
+  const BASE_URL = "https://sports-panel.onrender.com"; // ✅ Your backend URL
 
   // Fetch sports
   useEffect(() => {
@@ -26,7 +22,7 @@ export default function App() {
 
         // Priority order: cricket, tennis, soccer
         const priorityOrder = ["cricket", "tennis", "soccer"];
-        let sortedSports = res.data.sort((a, b) => {
+        const sortedSports = res.data.sort((a, b) => {
           const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
           const bIndex = priorityOrder.indexOf(b.name.toLowerCase());
           if (aIndex === -1 && bIndex === -1) return 0;
@@ -42,22 +38,35 @@ export default function App() {
         setLoading(false);
       }
     }
+
     fetchSports();
   }, []);
 
-  // Fetch leagues for selected sport
+  // ✅ Handle Sport Click
   const handleSportClick = async (sport) => {
     setSelectedSport(sport.id);
-    setSelectedSportName(sport.name); // ✅ store sport name for Tennis logic
+    setSelectedSportName(sport.name);
     setLeagues([]);
     setSelectedLeague(null);
     setMatches([]);
-    setExpandedMatchId(null);
 
     try {
+      // ⚽ If sport is soccer → hit your backend API
+      if (sport.name.toLowerCase() === "soccer") {
+        const res = await axios.get(`${BASE_URL}/soccer-competitions`);
+        const leagueArray = res.data.competitions.map((name) => ({
+          name,
+          matches: [],
+        }));
+        setLeagues(leagueArray);
+        return;
+      }
+
+      // 🏏 Otherwise, fetch from original API
       const res = await axios.get(
         `https://central.zplay1.in/pb/api/v1/events/matches/${sport.id}`
       );
+
       if (res.data.success) {
         const leagueMap = {};
         res.data.data.forEach((match) => {
@@ -66,10 +75,12 @@ export default function App() {
             leagueMap[match.league_name].push(match);
           }
         });
+
         const leagueArray = Object.keys(leagueMap).map((leagueName) => ({
           name: leagueName,
           matches: leagueMap[leagueName],
         }));
+
         setLeagues(leagueArray);
       }
     } catch (err) {
@@ -77,73 +88,13 @@ export default function App() {
     }
   };
 
-  // Show matches for selected league
-  const handleLeagueClick = (league) => {
-    setSelectedLeague(league);
-    setMatches(league.matches);
-    setExpandedMatchId(null);
-  };
-
-  // Fetch market data for a match
- const handleMatchClick = async (match) => {
-  const matchId = match.eventId || match.event_id;
-  if (expandedMatchId === matchId) {
-    setExpandedMatchId(null);
-    return;
-  }
-
-  setExpandedMatchId(matchId);
-  setMarketData((prev) => ({ ...prev, [matchId]: null }));
-  setMarketLoading(true);
-
-  try {
-    const res = await axios.get(
-      `https://zplay1.in/pb/api/v1/events/matchDetails/${matchId}`
-    );
-
-    if (res.data.success) {
-      const matchInfo = res.data.data.match;
-
-      // ✅ Normal market data
-      const regularMarkets = matchInfo?.matchOddData || [];
-
-      // ✅ Fancy market data grouped by category
-      const fancyMarketsRaw = matchInfo?.fancyOddData?.ml || [];
-      const fancyByCat = fancyMarketsRaw.reduce((acc, item) => {
-        if (!acc[item.cat]) acc[item.cat] = [];
-        acc[item.cat].push(item);
-        return acc;
-      }, {});
-
-      const fancyMarkets = Object.entries(fancyByCat).map(([cat, markets]) => ({
-        cat,
-        markets,
-      }));
-
-      setMarketData((prev) => ({
-        ...prev,
-        [matchId]: {
-          regular: regularMarkets,
-          fancy: fancyMarkets,
-        },
-      }));
-    }
-  } catch (err) {
-    console.error("Error fetching market data:", err);
-  } finally {
-    setMarketLoading(false);
-  }
-};
-
-
-
   if (loading) return <p>Loading sports...</p>;
 
   return (
     <div className="app-container">
       <h1 className="app-title">Sports Panel 🚀</h1>
 
-      {/* Sports */}
+      {/* Sports List */}
       <div className="sports-scroll-container">
         {sports.map((sport) => (
           <div
@@ -158,10 +109,14 @@ export default function App() {
         ))}
       </div>
 
-      {/* Leagues */}
+      {/* Leagues (for Soccer this will show unique competitions) */}
       {leagues.length > 0 && (
         <div className="leagues-container">
-          <h2>Leagues</h2>
+          <h2>
+            {selectedSportName.toLowerCase() === "soccer"
+              ? "Soccer Competitions"
+              : "Leagues"}
+          </h2>
           <div className="leagues-scroll">
             {leagues.map((league, idx) => (
               <div
@@ -169,18 +124,21 @@ export default function App() {
                 className={`league-box ${
                   selectedLeague?.name === league.name ? "selected" : ""
                 }`}
-                onClick={() => handleLeagueClick(league)}
               >
                 <p className="league-name">{league.name}</p>
-                <p className="league-count">{league.matches.length} matches</p>
+                {selectedSportName.toLowerCase() !== "soccer" && (
+                  <p className="league-count">
+                    {league.matches.length} matches
+                  </p>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Matches */}
-      {matches.length > 0 && (
+      {/* For soccer, matches section will not show */}
+      {selectedSportName.toLowerCase() !== "soccer" && matches.length > 0 && (
         <div className="matches-container">
           <h3>Matches</h3>
           <table className="events-table">
@@ -191,124 +149,16 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {matches.map((match) => {
-                const matchId = match.eventId || match.event_id;
-
-                return (
-                  <React.Fragment key={matchId}>
-                    <tr
-                      className="event-row"
-                      onClick={() => handleMatchClick(match)}
-                    >
-                      <td>{match.eventName || match.event_name}</td>
-                      <td>
-                        {new Date(
-                          match.eventDate || match.event_date
-                        ).toLocaleString()}
-                      </td>
-                    </tr>
-
-                    {/* Market row */}
-                    {expandedMatchId === matchId && marketLoading && (
-                      <tr>
-                        <td colSpan="2">Loading market data...</td>
-                      </tr>
-                    )}
-
-                    {expandedMatchId === matchId &&
-  !marketLoading &&
-  marketData[matchId] && (
-    <>
-      {/* ✅ Regular Markets */}
-      {marketData[matchId].regular?.length > 0 && (
-        <>
-          <tr>
-            <td colSpan="2">
-              <h4 className="market-section-title">Regular Markets</h4>
-            </td>
-          </tr>
-          {marketData[matchId].regular.map((market) => {
-            let maxProfitLimit = null;
-            const sportName = selectedSportName.toLowerCase();
-            if (sportName === "tennis" || sportName === "soccer") {
-              const stake = Number(market.inplay_stake_limit);
-              if (stake === 5000) maxProfitLimit = 100000;
-              else if (stake === 10000) maxProfitLimit = 200000;
-              else if (stake === 25000) maxProfitLimit = 300000;
-              else if (stake === 50000) maxProfitLimit = 400000;
-              else if (stake === 100000) maxProfitLimit = 500000;
-              else if (stake === 200000) maxProfitLimit = 700000;
-            }
-
-            return (
-              <tr key={market.id || market.marketId}>
-                <td colSpan="2">
-                  <div className="market-card">
-                    <p className="market-title">
-                      {market.marketName || market.mn}
-                    </p>
-                    <p>
-                      Inplay Stake Limit: {market.inplay_stake_limit} | Max Market
-                      Limit: {market.max_market_limit} | Min Stake Limit:{" "}
-                      {market.min_stake_limit} | Odd Limit: {market.odd_limit}
-                      {maxProfitLimit !== null &&
-                        ` | Max Profit Limit: ${maxProfitLimit}`}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </>
-      )}
-
-      {/* ✅ Fancy Markets Grouped by Category */}
-      {marketData[matchId].fancy?.length > 0 && (
-        <>
-          <tr>
-            <td colSpan="2">
-              <h4 className="market-section-title">Fancy Markets</h4>
-            </td>
-          </tr>
-          {marketData[matchId].fancy.map((group) => (
-            <React.Fragment key={group.cat}>
-              <tr>
-                <td colSpan="2">
-                  <h5 className="fancy-cat-title">🟢 {group.cat}</h5>
-                </td>
-              </tr>
-
-              {group.markets.map((market) => (
-                <tr key={market.mi}>
-                  <td colSpan="2">
-                    <div className="market-card fancy-card">
-                      <p className="market-title">{market.mn}</p>
-                      <p>
-                        Min Stake: {market.mins} | Max Stake: {market.ms} | Max
-                        Market Profit Limit: {market.mml}
-                      </p>
-                    </div>
+              {matches.map((match) => (
+                <tr key={match.eventId || match.event_id}>
+                  <td>{match.eventName || match.event_name}</td>
+                  <td>
+                    {new Date(
+                      match.eventDate || match.event_date
+                    ).toLocaleString()}
                   </td>
                 </tr>
               ))}
-            </React.Fragment>
-          ))}
-        </>
-      )}
-
-      {/* ✅ Fallback */}
-      {marketData[matchId].regular?.length === 0 &&
-        marketData[matchId].fancy?.length === 0 && (
-          <tr>
-            <td colSpan="2">No market data available</td>
-          </tr>
-        )}
-    </>
-  )}
-
-                  </React.Fragment>
-                );
-              })}
             </tbody>
           </table>
         </div>
