@@ -48,16 +48,24 @@ const fetchAndSaveOdds = async () => {
       payload.append("market_id", marketId);
 
       const oddsRes = await axios.post(
-        "https://odds.oramo247.com/ws/getMarketDataNew",
-        payload.toString(),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Origin: "https://fairplaypro.com",
-            Referer: "https://fairplaypro.com",
-          },
-        }
-      );
+  "https://odds.oramo247.com/ws/getMarketDataNew",
+  payload.toString(),
+  {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Origin: "https://fairplaypro.com",
+      Referer: "https://fairplaypro.com/",
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+      Accept: "application/json, text/plain, */*",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Sec-Fetch-Site": "cross-site",
+      "Sec-Fetch-Mode": "cors",
+      "Sec-Fetch-Dest": "empty",
+    },
+  }
+);
+
 
       const oddsData = oddsRes.data?.data;
       if (!oddsData) continue;
