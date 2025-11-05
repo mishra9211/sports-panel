@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
+import OddsDashboard from "./OddsDashboard"; // Path सही करें जहां OddsDashboard है
 
 export default function App() {
   const [sports, setSports] = useState([]);
@@ -14,6 +15,8 @@ export default function App() {
   const [matches, setMatches] = useState([]);
   const [matchDetails, setMatchDetails] = useState({});
   const [expandedMatch, setExpandedMatch] = useState(null);
+
+  const [showOdds, setShowOdds] = useState(false); // Toggle for Odds Dashboard
 
   const BASE_URL = "https://sports-panel.onrender.com";
 
@@ -38,7 +41,6 @@ export default function App() {
         setLoading(false);
       }
     }
-
     fetchSports();
   }, []);
 
@@ -52,7 +54,6 @@ export default function App() {
     setExpandedLeague(null);
 
     try {
-      // Soccer
       if (sport.name.toLowerCase() === "soccer") {
         const res = await axios.get(
           "https://api.dramo247.com/api/guest/event_list",
@@ -159,14 +160,20 @@ export default function App() {
     <div className="app-container">
       <h1 className="app-title">Sports Panel 🚀</h1>
 
+      {/* Toggle Odds Dashboard */}
+      <button
+        onClick={() => setShowOdds(!showOdds)}
+        style={{ marginBottom: "20px", padding: "8px 12px" }}
+      >
+        {showOdds ? "Hide Odds Dashboard" : "Show Odds Dashboard"}
+      </button>
+
       {/* Sports List */}
       <div className="sports-scroll-container">
         {sports.map((sport) => (
           <div
             key={sport.id}
-            className={`sport-box ${
-              selectedSport === sport.id ? "selected" : ""
-            }`}
+            className={`sport-box ${selectedSport === sport.id ? "selected" : ""}`}
             onClick={() => handleSportClick(sport)}
           >
             {sport.name}
@@ -296,6 +303,13 @@ export default function App() {
             </table>
           </div>
         )}
+
+      {/* Odds Dashboard */}
+      {showOdds && (
+        <div style={{ marginTop: "40px" }}>
+          <OddsDashboard />
+        </div>
+      )}
     </div>
   );
 }
