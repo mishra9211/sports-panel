@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import axios from "axios";
 import cors from "cors";
+import soccerOddsRoutes from "./routes/soccerOdds.js";
+
 
 dotenv.config();
 
@@ -82,6 +84,10 @@ app.get("/sports", async (req, res) => {
     res.status(500).json({ message: "Error fetching sports" });
   }
 });
+
+
+app.use("/api/soccer-odds", soccerOddsRoutes);
+
 
 
 
