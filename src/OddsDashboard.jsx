@@ -7,7 +7,7 @@ export default function OddsDashboard() {
   const [loading, setLoading] = useState(false);
   const [fetchMessage, setFetchMessage] = useState("");
 
-  const BASE_URL = "http://localhost:5000/api/odds"; // Change to your backend URL
+  const BASE_URL = "https://casino-project.onrender.com/api/odds"; // Change to your backend URL
 
   // Fetch & save soccer odds
   const fetchOdds = async () => {
