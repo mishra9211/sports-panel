@@ -5,11 +5,23 @@ import Odds from "../models/Odds.js";
 const router = express.Router();
 
 // ---------------------------
-// 1️⃣ Fetch & Save Soccer Odds
+// Status tracker
 // ---------------------------
-router.get("/fetch", async (req, res) => {
+let lastFetchStatus = {
+  lastRun: null,
+  success: false,
+  message: "",
+  eventsSaved: 0,
+};
+
+// ---------------------------
+// Function to fetch & save odds
+// ---------------------------
+const fetchAndSaveOdds = async () => {
+  const runTime = new Date();
   try {
-    // 1. Fetch soccer events
+    console.log(`[${runTime.toLocaleString()}] Starting fetch...`);
+
     const eventsRes = await axios.get(
       "https://api.dramo247.com/api/guest/event_list",
       {
@@ -26,7 +38,8 @@ router.get("/fetch", async (req, res) => {
     const events = eventsRes.data?.data?.events || [];
     const soccerEvents = events.filter((ev) => ev.event_type_id === 1);
 
-    // 2. Fetch odds for each match
+    let savedCount = 0;
+
     for (const ev of soccerEvents) {
       const marketId = ev.market_id || ev.event_id?.toString();
       if (!marketId) continue;
@@ -49,28 +62,58 @@ router.get("/fetch", async (req, res) => {
       const oddsData = oddsRes.data?.data;
       if (!oddsData) continue;
 
-      // Save to DB
-      const entry = new Odds({
-        marketId,
-        eventId: ev.event_id,
-        eventName: ev.name,
-        competition: ev.competition_name,
-        odds: oddsData,
-      });
+      await Odds.findOneAndUpdate(
+        { marketId },
+        {
+          marketId,
+          eventId: ev.event_id,
+          eventName: ev.name,
+          competition: ev.competition_name,
+          odds: oddsData,
+          timestamp: new Date(),
+        },
+        { upsert: true }
+      );
 
-      await entry.save();
+      savedCount++;
     }
 
-    res.json({ success: true, message: "Soccer odds fetched & saved ✅", count: soccerEvents.length });
+    console.log(
+      `[${runTime.toLocaleString()}] Fetched & saved ${savedCount} soccer events ✅`
+    );
+
+    lastFetchStatus = {
+      lastRun: runTime,
+      success: true,
+      message: "Fetch successful",
+      eventsSaved: savedCount,
+    };
   } catch (err) {
-    console.error("Error fetching soccer odds:", err.message);
-    res.status(500).json({ success: false, message: err.message });
+    console.error(`[${runTime.toLocaleString()}] Error fetching soccer odds:`, err.message);
+
+    lastFetchStatus = {
+      lastRun: runTime,
+      success: false,
+      message: err.message,
+      eventsSaved: 0,
+    };
   }
-});
+};
 
 // ---------------------------
-// 2️⃣ Get Odds History by Market
+// Call fetch function every X minutes
 // ---------------------------
+const FETCH_INTERVAL = 5 * 60 * 1000; // 5 मिनट में एक बार
+setInterval(fetchAndSaveOdds, FETCH_INTERVAL);
+
+// तुरंत fetch start
+fetchAndSaveOdds();
+
+// ---------------------------
+// API endpoints
+// ---------------------------
+
+// Odds history
 router.get("/history/:marketId", async (req, res) => {
   try {
     const { marketId } = req.params;
@@ -80,6 +123,11 @@ router.get("/history/:marketId", async (req, res) => {
     console.error("Error fetching odds history:", err.message);
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+// Last fetch status
+router.get("/status", (req, res) => {
+  res.json({ success: true, status: lastFetchStatus });
 });
 
 export default router;
