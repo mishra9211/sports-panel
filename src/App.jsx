@@ -27,8 +27,8 @@ export default function App() {
         const res = await axios.get(`${BASE_URL}/sports`);
         const priorityOrder = ["cricket", "tennis", "soccer"];
         const sortedSports = res.data.sort((a, b) => {
-          const aIndex = priorityOrder.indexOf(a.name.toLowerCase());
-          const bIndex = priorityOrder.indexOf(b.name.toLowerCase());
+          const aIndex = priorityOrder.indexOf(a.sport_name.toLowerCase());
+          const bIndex = priorityOrder.indexOf(b.sport_name.toLowerCase());
           if (aIndex === -1 && bIndex === -1) return 0;
           if (aIndex === -1) return 1;
           if (bIndex === -1) return -1;
@@ -46,15 +46,15 @@ export default function App() {
 
   // Handle sport click
   const handleSportClick = async (sport) => {
-    setSelectedSport(sport.id);
-    setSelectedSportName(sport.name);
+    setSelectedSport(sport.sport_id);
+    setSelectedSportName(sport.sport_name);
     setLeagues([]);
     setSelectedLeague(null);
     setMatches([]);
     setExpandedLeague(null);
 
     try {
-      if (sport.name.toLowerCase() === "soccer") {
+      if (sport.sport_name.toLowerCase() === "soccer") {
         const res = await axios.get(
           "https://api.dramo247.com/api/guest/event_list",
           {
@@ -87,7 +87,7 @@ export default function App() {
 
       // Other sports including tennis
       const res = await axios.get(
-        `https://central.zplay1.in/pb/api/v1/events/matches/${sport.id}`
+        `https://central.zplay1.in/pb/api/v1/events/matches/${sport.sport_id}`
       );
 
       if (res.data.success) {
@@ -119,9 +119,8 @@ export default function App() {
       const isExpanded = expandedLeague === league.name;
       setExpandedLeague(isExpanded ? null : league.name);
       setMatches(isExpanded ? [] : league.matches);
-    }
-
-    if (selectedSportName.toLowerCase() === "tennis") {
+    } else {
+      // Tennis or other sports
       const toggle = expandedLeague === league.name ? null : league.name;
       setExpandedLeague(toggle);
       setMatches(league.matches);
@@ -172,11 +171,11 @@ export default function App() {
       <div className="sports-scroll-container">
         {sports.map((sport) => (
           <div
-            key={sport.id}
-            className={`sport-box ${selectedSport === sport.id ? "selected" : ""}`}
+            key={sport.sport_id}
+            className={`sport-box ${selectedSport === sport.sport_id ? "selected" : ""}`}
             onClick={() => handleSportClick(sport)}
           >
-            {sport.name}
+            {sport.sport_name}
           </div>
         ))}
       </div>
